@@ -1,7 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
+
+const Person = require("./models/person");
 
 app.use(express.json());
 app.use(express.static("build"));
@@ -36,24 +39,25 @@ let persons = [
   },
 ];
 
-const generateId = () => Math.floor(Math.random() * 999999);
-
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((results) => {
+    response.json(results);
+  });
 });
 
 app.get("/info", (request, response) => {
-  const entries = `<p>Phonebook has info for ${persons.length} people <p/>`;
-  const date = `<p>${new Date()}<p/>`;
+  Person.find({}).then((results) => {
+    const entries = `<p>Phonebook has info for ${results.length} people <p/>`;
+    const date = `<p>${new Date()}<p/>`;
 
-  response.send(entries + date);
+    response.send(entries + date);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  person ? response.json(person) : response.status(404).end();
+  Person.findById(request.params.id).then((result) => {
+    response.json(result);
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -70,24 +74,17 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({ error: "missing name or number" });
   }
 
-  const duplicatePerson = persons.find((person) => person.name === body.name);
-
-  if (duplicatePerson) {
-    return response.status(409).json({ error: "name must be unique" });
-  }
-
-  const newPerson = {
+  const newPerson = Person({
     name: body.name,
     number: body.number,
-    id: generateId(),
-  };
+  });
 
-  persons = persons.concat(newPerson);
-
-  response.json(newPerson);
+  newPerson.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
