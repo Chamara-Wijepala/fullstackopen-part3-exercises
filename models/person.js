@@ -1,14 +1,14 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
+require('dotenv').config();
+const mongoose = require('mongoose');
 
-mongoose.set("strictQuery", false);
+mongoose.set('strictQuery', false);
 
 const url = process.env.MONGODB_URI;
 
 mongoose
   .connect(url)
-  .then((result) => console.log("connected to MongoDB"))
-  .catch((error) => console.log("connection error:", error.message));
+  .then(() => console.log('connected to MongoDB'))
+  .catch((error) => console.log('connection error:', error.message));
 
 const personSchema = new mongoose.Schema({
   name: {
@@ -21,16 +21,15 @@ const personSchema = new mongoose.Schema({
     minLength: 8,
     required: true,
     validate: {
-      validator: function (v) {
+      validator(v) {
         return /^\d{2}|\d{3}-\d$/.test(v);
       },
-      message: (props) =>
-        `${props.value} is not a valid phone number. It should be in the format of NN-NNNNNN or NNN-NNNNN`,
+      message: (props) => `${props.value} is not a valid phone number. It should be in the format of NN-NNNNNN or NNN-NNNNN`,
     },
   },
 });
 
-personSchema.set("toJSON", {
+personSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
     delete returnedObject._id;
@@ -38,4 +37,4 @@ personSchema.set("toJSON", {
   },
 });
 
-module.exports = mongoose.model("Person", personSchema);
+module.exports = mongoose.model('Person', personSchema);
